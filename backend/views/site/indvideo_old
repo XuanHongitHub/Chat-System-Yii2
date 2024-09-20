@@ -1,0 +1,226 @@
+$this->title = 'YiiTwoBe Videos';
+
+?>
+<div class="site-index">
+    <div class="main">
+        <div class="header">
+            <h1>Nội dung của kênh</h1>
+            <div class="actions">
+                <a href="" class="btn btn-primary">Thêm Video</a>
+            </div>
+        </div>
+        <div class="content">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="video-tab" data-toggle="tab" href="#video" role="tab"
+                            aria-controls="video" aria-selected="true">Video</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="shorts-tab" data-toggle="tab" href="#shorts" role="tab"
+                            aria-controls="shorts" aria-selected="false">Shorts</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="live-tab" data-toggle="tab" href="#live" role="tab" aria-controls="live"
+                            aria-selected="false">Sự kiện phát trực tiếp</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="playlist-tab" data-toggle="tab" href="#playlist" role="tab"
+                            aria-controls="playlist" aria-selected="false">Danh sách phát</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="podcast-tab" data-toggle="tab" href="#podcast" role="tab"
+                            aria-controls="podcast" aria-selected="false">Podcast</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="promotion-tab" data-toggle="tab" href="#promotion" role="tab"
+                            aria-controls="promotion" aria-selected="false">Quảng bá</a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="video" role="tabpanel" aria-labelledby="video-tab">
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Chọn</th>
+                                    <th scope="col">Video</th>
+                                    <th scope="col">Chế độ hiển thị</th>
+                                    <th scope="col">Hạn chế</th>
+                                    <th scope="col">Ngày</th>
+                                    <th scope="col">Số lượt xem</th>
+                                    <th scope="col">Số bình luận</th>
+                                    <th scope="col">Lượt thích (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td scope="row"><input type="checkbox"></td>
+                                    <td><a href="#">Video Title</a></td>
+                                    <td>Công khai</td>
+                                    <td>Không</td>
+                                    <td>20/09/2024</td>
+                                    <td>100</td>
+                                    <td>5</td>
+                                    <td>95%</td>
+                                </tr>
+                                <tr>
+                                    <td scope="row"><input type="checkbox"></td>
+                                    <td><a href="#">Video Title</a></td>
+                                    <td>Công khai</td>
+                                    <td>Không</td>
+                                    <td>19/09/2024</td>
+                                    <td>50</td>
+                                    <td>2</td>
+                                    <td>80%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="text-center">
+                            <img src="https://www.gstatic.com/youtube/img/creator/no_content_illustration_v4.svg"
+                                alt="Không có nội dung" width="100">
+                            <h5 class="mt-3">Không có nội dung</h5>
+                            <button class="btn btn-primary mt-3">Tải video lên</button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="shorts" role="tabpanel" aria-labelledby="shorts-tab">
+                        <p class="card-text">Content for Shorts Tab</p>
+                    </div>
+                    <div class="tab-pane fade" id="live" role="tabpanel" aria-labelledby="live-tab">
+                        <p class="card-text">Content for Live Tab</p>
+                    </div>
+                    <div class="tab-pane fade" id="playlist" role="tabpanel" aria-labelledby="playlist-tab">
+                        <p class="card-text">Content for Playlist Tab</p>
+                    </div>
+                    <div class="tab-pane fade" id="podcast" role="tabpanel" aria-labelledby="podcast-tab">
+                        <p class="card-text">Content for Podcast Tab</p>
+                    </div>
+                    <div class="tab-pane fade" id="promotion" role="tabpanel" aria-labelledby="promotion-tab">
+                        <p class="card-text">Content for Promotion Tab</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+
+<?php
+
+use yii\helpers\Html;
+use yii\grid\GridView;
+use yii\helpers\Url;
+use common\models\Video;
+use yii\grid\ActionColumn;
+
+/** @var yii\web\View $this */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+
+$this->title = 'Nội dung của kênh';
+?>
+<div class="video-index">
+    <div class="header">
+        <h1>
+            <?= Html::encode($this->title) ?>
+        </h1>
+        <div class="actions">
+            <?= Html::a('Thêm Video', ['create'], ['class' => 'btn btn-primary']) ?>
+        </div>
+    </div>
+    <div class="content">
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="video-tab" data-toggle="tab" href="#video" role="tab"
+                        aria-controls="video" aria-selected="true">Video</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="shorts-tab" data-toggle="tab" href="#shorts" role="tab"
+                        aria-controls="shorts" aria-selected="false">Shorts</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="live-tab" data-toggle="tab" href="#live" role="tab" aria-controls="live"
+                        aria-selected="false">Sự kiện phát trực tiếp</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="playlist-tab" data-toggle="tab" href="#playlist" role="tab"
+                        aria-controls="playlist" aria-selected="false">Danh sách phát</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="podcast-tab" data-toggle="tab" href="#podcast" role="tab"
+                        aria-controls="podcast" aria-selected="false">Podcast</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="promotion-tab" data-toggle="tab" href="#promotion" role="tab"
+                        aria-controls="promotion" aria-selected="false">Quảng bá</a>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="video" role="tabpanel" aria-labelledby="video-tab">
+                    <?= GridView::widget([
+                        'dataProvider' => $dataProvider,
+                        'columns' => [
+                            [
+                                'class' => 'yii\grid\CheckboxColumn', // Checkbox để chọn video
+                            ],
+                            [
+                                'attribute' => 'title',
+                                'label' => 'Video',
+                                'format' => 'raw',
+                                'value' => function ($model) {
+                                    return Html::a($model->title, ['view', 'id' => $model->id]);
+                                }
+                            ],
+                            'status', // Cột "Chế độ hiển thị"
+                            [
+                                'attribute' => 'restriction',
+                                'label' => 'Hạn chế',
+                                'value' => function ($model) {
+                                    return $model->restriction ? 'Có' : 'Không';
+                                }
+                            ],
+                            'created_at:date', // Cột "Ngày"
+                            'view_count', // Cột "Số lượt xem"
+                            'comment_count', // Cột "Số bình luận"
+                            [
+                                'attribute' => 'like_percentage',
+                                'label' => 'Lượt thích (%)',
+                                'value' => function ($model) {
+                                    return $model->like_percentage . '%';
+                                }
+                            ],
+                        ],
+                    ]); ?>
+
+                    <div class="text-center">
+                        <img src="https://www.gstatic.com/youtube/img/creator/no_content_illustration_v4.svg"
+                            alt="Không có nội dung" width="100">
+                        <h5 class="mt-3">Không có nội dung</h5>
+                        <?= Html::a('Tải video lên', ['create'], ['class' => 'btn btn-primary mt-3']) ?>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="shorts" role="tabpanel" aria-labelledby="shorts-tab">
+                    <p class="card-text">Nội dung cho tab Shorts</p>
+                </div>
+                <div class="tab-pane fade" id="live" role="tabpanel" aria-labelledby="live-tab">
+                    <p class="card-text">Nội dung cho tab Live</p>
+                </div>
+                <div class="tab-pane fade" id="playlist" role="tabpanel" aria-labelledby="playlist-tab">
+                    <p class="card-text">Nội dung cho tab Playlist</p>
+                </div>
+                <div class="tab-pane fade" id="podcast" role="tabpanel" aria-labelledby="podcast-tab">
+                    <p class="card-text">Nội dung cho tab Podcast</p>
+                </div>
+                <div class="tab-pane fade" id="promotion" role="tabpanel" aria-labelledby="promotion-tab">
+                    <p class="card-text">Nội dung cho tab Promotion</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
