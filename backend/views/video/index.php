@@ -10,16 +10,16 @@ use yii\grid\GridView;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Videos';
-
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="video-index">
 
-    <div class="header">
-        <h1><?= Html::encode($this->title) ?></h1>
-        <div class="actions">
-            <?= Html::a('Thêm Video', ['create'], ['class' => 'btn btn-primary']) ?>
-        </div>
-    </div>
+    <h1><?= Html::encode($this->title) ?></h1>
+
+    <p>
+        <?= Html::a('Create Video', ['create'], ['class' => 'btn btn-success']) ?>
+    </p>
+
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -31,15 +31,19 @@ $this->title = 'Videos';
             'title',
             'description:ntext',
             'tags',
-            //'status',
-            //'has_thumbnai',
-            //'video_name',
-            //'view_count',
-            //'like_count',
-            //'comment_count',
-            //'created_at',
-            //'updated_at',
-            //'created_by',
+            [
+                'attribute' => 'has_thumbnail',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if (!empty($model->has_thumbnail)) {
+                        $thumbnailUrl = '/uploads/thumbnails/' . $model->has_thumbnail;
+                        return Html::img($thumbnailUrl, ['alt' => 'Thumbnail', 'style' => 'width:100px; height:auto;']);
+                    }
+                    return 'No Thumbnail';
+                },
+            ],
+
+
             [
                 'class' => ActionColumn::className(),
                 'urlCreator' => function ($action, Video $model, $key, $index, $column) {
@@ -48,6 +52,7 @@ $this->title = 'Videos';
             ],
         ],
     ]); ?>
+
 
 
 </div>

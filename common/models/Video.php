@@ -9,15 +9,14 @@ use Yii;
  *
  * @property int $id
  * @property string $video_id
- * @property string $title
+ * @property string|null $title
  * @property string|null $description
  * @property string|null $tags
  * @property int|null $status
- * @property int|null $has_thumbnai
- * @property string|null $video_name
- * @property int $view_count
- * @property int $like_count
- * @property int $comment_count
+ * @property string|null $has_thumbnail
+ * @property int|null $view_count
+ * @property int|null $like_count
+ * @property int|null $comment_count
  * @property string|null $video_path
  * @property int|null $created_at
  * @property int|null $updated_at
@@ -26,7 +25,7 @@ use Yii;
 class Video extends \yii\db\ActiveRecord
 {
     public $video;
-    public $video_path;
+    public $thumbnail;
     /**
      * {@inheritdoc}
      */
@@ -41,11 +40,13 @@ class Video extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['video_id', 'title'], 'required'],
+            // [['video_id'], 'required'],
             [['description'], 'string'],
-            [['status', 'has_thumbnai', 'view_count', 'like_count', 'comment_count', 'created_at', 'updated_at', 'created_by'], 'integer'],
+            [['status', 'view_count', 'like_count', 'comment_count', 'created_at', 'updated_at', 'created_by'], 'integer'],
             [['video_id'], 'string', 'max' => 16],
-            [['title', 'tags', 'video_name', 'video_path'], 'mp4, avi, mkv', 'maxSize' => 1024 * 1024 * 1000],
+            [['title', 'tags', 'has_thumbnail', 'video_path'], 'string', 'max' => 512],
+            [['video'], 'file', 'skipOnEmpty' => true, 'extensions' => 'mp4,mov,avi'],
+            [['thumbnail'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png,jpg,jpeg'],
         ];
     }
 
@@ -61,8 +62,7 @@ class Video extends \yii\db\ActiveRecord
             'description' => 'Description',
             'tags' => 'Tags',
             'status' => 'Status',
-            'has_thumbnai' => 'Has Thumbnai',
-            'video_name' => 'Video Name',
+            'has_thumbnail' => 'Has Thumbnail',
             'view_count' => 'View Count',
             'like_count' => 'Like Count',
             'comment_count' => 'Comment Count',

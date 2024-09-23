@@ -87,20 +87,25 @@ class VideoController extends Controller
     {
         $model = new Video();
 
-        if (Yii::$app->request->isPost) {
-            $model->video = UploadedFile::getInstanceByName('video');
+        if ($model->load(Yii::$app->request->post())) {
+            $video = UploadedFile::getInstance($model, 'video');
+            $thumbnail = UploadedFile::getInstance($model, 'thumbnail');
 
-            if ($model->load(Yii::$app->request->post())) {
+            if ($video && $thumbnail) {
+                $videoPath = Yii::getAlias('@backend/web/uploads/videos/') . $video->name;
+                $thumbnailPath = Yii::getAlias('@backend/web/uploads/thumbnails/') . $thumbnail->name;
 
-                if ($model->video) {
-                    $filePath = 'uploads/' . $model->video->baseName . '.' . $model->video->extension;
-                    $model->video->saveAs($filePath);
+                $video->saveAs($videoPath);
+                $thumbnail->saveAs($thumbnailPath);
 
-                    $model->video_path = $filePath;
-                }
+                $model->video_path = $video->name;
+                $model->has_thumbnail = $thumbnail->name;
 
                 if ($model->save()) {
-                    return $this->redirect(['update', 'id' => $model->id]);
+                    return $this->redirect(['view', 'id' => $model->id]);
+                } else {
+                    var_dump($model->getErrors());
+                    exit;
                 }
             }
         }
@@ -109,9 +114,6 @@ class VideoController extends Controller
             'model' => $model,
         ]);
     }
-
-
-
     /**
      * Updates an existing Video model.
      * If update is successful, the browser will be redirected to the 'view' page.

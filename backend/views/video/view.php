@@ -26,6 +26,30 @@ $this->params['breadcrumbs'][] = $this->title;
         ]) ?>
     </p>
 
+    <div class="thumbnail">
+        <?php if (!empty($model->has_thumbnail)): ?>
+            <h3>Thumbnail:</h3>
+            <?= Html::img('/uploads/thumbnails/' . $model->has_thumbnail, [
+                'alt' => 'Thumbnail',
+                'style' => 'width:200px; height:auto;'
+            ]) ?>
+        <?php else: ?>
+            <p>No Thumbnail Available</p>
+        <?php endif; ?>
+    </div>
+
+    <div class="video-player">
+        <h3>Video:</h3>
+        <?php if (!empty($model->video_path)): ?>
+            <video height="400" controls>
+                <source src="<?= '/uploads/videos/' . basename($model->video_path) ?>" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        <?php else: ?>
+            <p>No Video Available</p>
+        <?php endif; ?>
+    </div>
+
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
@@ -35,8 +59,6 @@ $this->params['breadcrumbs'][] = $this->title;
             'description:ntext',
             'tags',
             'status',
-            'has_thumbnai',
-            'video_name',
             'view_count',
             'like_count',
             'comment_count',
@@ -47,3 +69,9 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 
 </div>
+
+<?php if ($model->hasErrors()): ?>
+    <div class="alert alert-danger">
+        <?= implode('<br>', $model->getFirstErrors()) ?>
+    </div>
+<?php endif; ?>
