@@ -5,14 +5,18 @@ use yii\bootstrap5\NavBar;
 use yii\bootstrap5\Html;
 
 NavBar::begin([
-    'brandLabel' => Yii::$app->name,
+    'brandLabel' => '<div class="d-flex align-items-center justify-content-center" style="width: 100%;">
+        <img src="' . Yii::getAlias('@web') . '/images/logo-1.png" alt="Logo" style="height:30px; margin-right: 10px;">
+        <span class="fw-semibold">' . Yii::$app->name . '</span>
+    </div>',
+
     'brandUrl' => Yii::$app->homeUrl,
     'options' => [
-        'class' => 'navbar navbar-expand-md navbar-light bg-light fixed-top shadpw-sm',
+        'class' => 'navbar navbar-expand-md navbar-light yiiheader header fixed-top shadpw-sm',
     ],
 ]);
 $menuItems = [
-    ['label' => 'Home', 'url' => ['/site/index']],
+    // ['label' => 'Home', 'url' => ['/site/index']],
 ];
 if (Yii::$app->user->isGuest) {
     $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];

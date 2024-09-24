@@ -34,14 +34,14 @@ AppAsset::register($this);
         <?php echo $this->render('_header'); ?>
     </header>
 
-    <div class="container-fluid">
-        <div class="col-md-2 ">
+    <div class="container-fluid p-0">
+        <div class="aside-ct">
             <aside class="sidebar">
                 <?php echo $this->render('_sidebar'); ?>
             </aside>
         </div>
 
-        <div class="col-md-10 ps-2 pt-2">
+        <div class="content-ct ps-2 pt-2">
             <?= Breadcrumbs::widget([
                 'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
             ]) ?>

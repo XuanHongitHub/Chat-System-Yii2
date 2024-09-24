@@ -81,4 +81,9 @@ class Video extends \yii\db\ActiveRecord
     {
         return new \common\models\query\VideoQuery(get_called_class());
     }
+
+    public function getVideoLink()
+    {
+        return Yii::$app->params['backendUrl'] . 'uploads/videos/' . $this->video_path;
+    }
 }
