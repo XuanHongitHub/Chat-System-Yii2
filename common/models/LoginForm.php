@@ -18,7 +18,7 @@ class LoginForm extends Model
 
     public static function tableName()
     {
-        return '{{%users}}';
+        return '{{%user}}';
     }
     /**
      * {@inheritdoc}

@@ -18,70 +18,48 @@ AppAsset::register($this);
 
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.31.3/tagify.css"
+        integrity="sha512-fg4mbaXioGkhZsVQlBUD7MmEA5zQY4I3aiawILa2nHXUk0e5gBZjlwGoJCeRIAVHqYOdaddDQA7HUXwqx3vVAA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
     <?php $this->head() ?>
 </head>
 
 <body class="d-flex flex-column h-100">
     <?php $this->beginBody() ?>
 
-    <header>
-        <?php
-        NavBar::begin([
-            'brandLabel' => Yii::$app->name,
-            'brandUrl' => Yii::$app->homeUrl,
-            'options' => [
-                'class' => 'navbar navbar-expand-md navbar-dark bg-dark fixed-top',
-            ],
-        ]);
-        $menuItems = [
-            ['label' => 'Home', 'url' => ['/site/index']],
-            ['label' => 'About', 'url' => ['/site/about']],
-            ['label' => 'Contact', 'url' => ['/site/contact']],
-        ];
-        if (Yii::$app->user->isGuest) {
-            $menuItems[] = ['label' => 'Signup', 'url' => ['/site/signup']];
-        }
-
-        echo Nav::widget([
-            'options' => ['class' => 'navbar-nav me-auto mb-2 mb-md-0'],
-            'items' => $menuItems,
-        ]);
-        if (Yii::$app->user->isGuest) {
-            echo Html::tag('div', Html::a('Login', ['/site/login'], ['class' => ['btn btn-link login text-decoration-none']]), ['class' => ['d-flex']]);
-        } else {
-            echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
-                . Html::submitButton(
-                    'Logout (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'btn btn-link logout text-decoration-none']
-                )
-                . Html::endForm();
-        }
-        NavBar::end();
-        ?>
-    </header>
-
-    <main role="main" class="flex-shrink-0">
-        <div class="container">
+    <div class="container-fluid">
+        <div class="row-ct">
+            <?php echo $this->render('_sidebar'); ?>
             <?= Breadcrumbs::widget([
                 'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
             ]) ?>
             <?= Alert::widget() ?>
             <?= $content ?>
         </div>
-    </main>
-
-    <footer class="footer mt-auto py-3 text-muted">
-        <div class="container">
-            <p class="float-start">&copy; <?= Html::encode(Yii::$app->name) ?> <?= date('Y') ?></p>
-            <p class="float-end"><?= Yii::powered() ?></p>
-        </div>
-    </footer>
+    </div>
 
     <?php $this->endBody() ?>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.31.3/tagify.min.js"
+    integrity="sha512-YrKVSda1sKH9vnfrtO2Dzkv1CHmsnQsPTIBv9IDdu7bqiHAvmTf02zxHv3t+d2hcIWTgJHi+6X6Oy21MVyWNwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </html>
 <?php $this->endPage();
