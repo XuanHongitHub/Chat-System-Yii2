@@ -60,101 +60,71 @@ class ChatController extends Controller
         }
         return ['status' => 'error', 'message' => 'Tên tài khoản không hợp lệ.'];
     }
-    // public function actionAddRoom()
-    // {
-    //     Yii::$app->response->format = Response::FORMAT_JSON;
-
-    //     $roomName = Yii::$app->request->post('room_name'); // Tên phòng chat
-    //     $members = Yii::$app->request->post('members'); // Danh sách ID thành viên, có thể là array
-
-    //     if ($roomName) {
-    //         // Tạo một phòng chat mới
-    //         $chatRoom = new ChatRooms();
-    //         $chatRoom->name = $roomName; // Tên phòng
-    //         $chatRoom->visibility = false; // Thiết lập visibility mặc định (có thể thay đổi tùy theo logic của bạn)
-    //         $chatRoom->created_by = Yii::$app->user->id; // ID người tạo
-    //         $chatRoom->created_at = time(); // Thời gian tạo
-    //         $chatRoom->updated_at = time(); // Thời gian cập nhật
-
-    //         // Kiểm tra và lưu phòng chat
-    //         if ($chatRoom->save()) {
-    //             // Nếu có danh sách thành viên, thêm họ vào phòng chat
-    //             if (!empty($members)) {
-    //                 foreach ($members as $memberId) {
-    //                     // Thêm thành viên vào bảng chat_room_user
-    //                     $chatRoomUser = new ChatRoomUser(); // Tạo model cho bảng chat_room_user
-    //                     $chatRoomUser->chat_room_id = $chatRoom->id; // ID phòng chat
-    //                     $chatRoomUser->user_id = $memberId; // ID người dùng
-    //                     $chatRoomUser->joined_at = time(); // Thời gian tham gia
-    //                     $chatRoomUser->save(); // Lưu thành viên vào phòng
-    //                 }
-    //             }
-    //             return ['status' => 'success', 'message' => 'Phòng chat đã được thêm!'];
-    //         } else {
-    //             return ['status' => 'error', 'message' => 'Có lỗi xảy ra khi thêm phòng chat.'];
-    //         }
-    //     }
-    //     return ['status' => 'error', 'message' => 'Tên phòng không hợp lệ.'];
-    // }
     public function actionAddRoom()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $roomName = Yii::$app->request->post('room_name');
-        $members = Yii::$app->request->post('members'); // Lấy danh sách thành viên từ POST
+        $members = json_decode(Yii::$app->request->post('members'), true);
 
-        if (empty($roomName) || empty($members)) {
-            return [
-                'status' => 'error',
-                'message' => 'Tên phòng và thành viên không được để trống.'
-            ];
+        if (empty($roomName)) {
+            Yii::error('Tên phòng không hợp lệ.', __METHOD__);
+            return ['status' => 'error', 'message' => 'Tên phòng không hợp lệ.'];
         }
 
-        // Chuyển đổi chuỗi JSON thành mảng
-        $memberIds = [];
-        foreach (json_decode($members) as $member) {
-            $memberIds[] = $member->id; // Lấy ID từ đối tượng
-        }
-
-        // Thực hiện thêm phòng chat vào cơ sở dữ liệu
         $chatRoom = new ChatRooms();
         $chatRoom->name = $roomName;
+        $chatRoom->visibility = Yii::$app->request->post('visibility', false);
+        $chatRoom->created_by = Yii::$app->user->id;
+        $chatRoom->created_at = time();
+        $chatRoom->updated_at = time();
 
         if ($chatRoom->save()) {
-            // Lưu ID thành viên vào bảng liên kết chat_room_user
-            foreach ($memberIds as $memberId) {
-                $chatRoomUser = new ChatRoomUser();
-                $chatRoomUser->chat_room_id = $chatRoom->id; // Gán ID phòng chat
-                $chatRoomUser->user_id = $memberId; // Gán ID thành viên
+            $creatorChatRoomUser = new ChatRoomUser();
+            $creatorChatRoomUser->chat_room_id = $chatRoom->id;
+            $creatorChatRoomUser->user_id = Yii::$app->user->id;
+            $creatorChatRoomUser->joined_at = time();
 
-                // Thêm thời gian tham gia (nếu cần)
-                $chatRoomUser->joined_at = time(); // Hoặc sử dụng một giá trị thời gian khác
-
-                if (!$chatRoomUser->save()) {
-                    // Nếu không lưu được thành viên, bỏ qua và tiếp tục với các thành viên khác
-                    Yii::error('Lỗi khi lưu thành viên: ' . implode(', ', $chatRoomUser->getFirstErrors()));
-                }
+            if (!$creatorChatRoomUser->save()) {
+                Yii::error('Failed to save creator to chat room user: ' . json_encode($creatorChatRoomUser->getErrors()), __METHOD__);
+            } else {
+                Yii::info('Creator ID: ' . Yii::$app->user->id . ' added successfully to chat room ID: ' . $chatRoom->id, __METHOD__);
             }
 
-            return [
-                'status' => 'success',
-                'message' => 'Phòng chat đã được tạo thành công!'
-            ];
+            if (!empty($members) && is_array($members)) {
+                foreach ($members as $member) {
+                    if (isset($member['id']) && is_int($member['id'])) {
+                        $chatRoomUser = new ChatRoomUser();
+                        $chatRoomUser->chat_room_id = $chatRoom->id;
+                        $chatRoomUser->user_id = (int)$member['id'];
+                        $chatRoomUser->joined_at = time();
+
+                        if (!$chatRoomUser->save()) {
+                            Yii::error('Failed to save chat room user: ' . json_encode($chatRoomUser->getErrors()), __METHOD__);
+                        } else {
+                            Yii::info('Member ID: ' . $member['id'] . ' added successfully to chat room ID: ' . $chatRoom->id, __METHOD__);
+                        }
+                    } else {
+                        Yii::error('Invalid member data: ' . json_encode($member), __METHOD__);
+                    }
+                }
+            } else {
+                Yii::info('No members to add for chat room ID: ' . $chatRoom->id, __METHOD__);
+            }
+
+            return ['status' => 'success', 'message' => 'Phòng chat đã được thêm!'];
         } else {
-            return [
-                'status' => 'error',
-                'message' => 'Có lỗi xảy ra khi tạo phòng chat: ' . implode(', ', $chatRoom->getFirstErrors())
-            ];
+            Yii::error('Failed to save chat room: ' . json_encode($chatRoom->getErrors()), __METHOD__);
+            return ['status' => 'error', 'message' => 'Có lỗi xảy ra khi thêm phòng chat.'];
         }
     }
-
 
 
     public function actionSendMessage()
     {
         $model = new Messages();
         $model->load(Yii::$app->request->post());
-        $model->user_id = Yii::$app->user->id; // ID của người dùng đang đăng nhập
+        $model->user_id = Yii::$app->user->id;
         $model->created_at = time();
         $model->updated_at = time();
 

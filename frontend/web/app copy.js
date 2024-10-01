@@ -53,12 +53,9 @@ function getCsrfToken() {
 // }
 
 // Khi tài liệu được tải xong
-// Khai báo biến tagify ở cấp độ cao hơn
-var tagify;
-
 document.addEventListener('DOMContentLoaded', function () {
-    var input = document.querySelector('#members');
-    tagify = new Tagify(input); // Gán biến tagify tại đây
+    var input = document.querySelector('#chat_room_user');
+    var tagify = new Tagify(input);
 
     // Lấy danh sách liên hệ và thêm vào Tagify
     fetch('/chat/get-contacts')
@@ -81,34 +78,39 @@ $(document).ready(function () {
     $('#addRoomButton').on('click', function (event) {
         event.preventDefault();
 
-        var roomName = $('#roomName').val();
-        var members = tagify.value;
+        var roomName = $('#roomName').val(); // Lấy tên phòng từ input
+        var members = $('#chat_room_user').val(); // Lấy danh sách thành viên từ input
 
-        var memberData = members.map(function (member) {
-            return { id: member.id };
-        });
+        console.log('Room Name:', roomName);
+        console.log('Members Input:', members);
 
+        // Chuyển danh sách thành viên thành mảng
+        members = members ? JSON.parse(members) : []; // Chuyển đổi chuỗi JSON thành mảng
+
+        console.log('Processed Members:', members);
+
+        // Gửi yêu cầu AJAX
         $.ajax({
             type: 'POST',
-            url: '/chat/add-room',
+            url: '/chat/add-room', // Cập nhật đường dẫn tới action trong controller
             headers: {
-                'X-CSRF-Token': getCsrfToken()
+                'X-CSRF-Token': getCsrfToken() // Thêm CSRF token nếu cần
             },
             data: {
                 room_name: roomName,
-                members: JSON.stringify(memberData)
+                members: members // Gửi mảng thành viên
             },
             success: function (response) {
+                console.log('Server Response:', response);
                 if (response.status === 'success') {
                     $('#response-message').html('<div class="alert alert-success">' + response.message + '</div>');
-                    setTimeout(function () {
-                        $('#addRoomModal').modal('hide');
-                    }, 5000);
+                    $('#addRoomModal').modal('hide');
                 } else {
                     $('#response-message').html('<div class="alert alert-danger">' + response.message + '</div>');
                 }
             },
             error: function (xhr, status, error) {
+                console.error('AJAX Error:', error);
                 $('#response-message').html('<div class="alert alert-danger">Có lỗi xảy ra: ' + error + '</div>');
             }
         });

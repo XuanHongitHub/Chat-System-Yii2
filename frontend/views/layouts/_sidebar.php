@@ -120,10 +120,10 @@ use yii\bootstrap5\Nav;
                                     placeholder="Enter room name">
                             </div>
                             <div class="form-group mb-4">
-                                <label for="chat_room_user" class="fw-medium">Members <span
+                                <label for="members" class="fw-medium">Members <span
                                         class="text-danger">*</span></label>
                                 <input name="members" placeholder="Enter members" class="form-control"
-                                    id="chat_room_user">
+                                    id="members">
                             </div>
                             <div class="form-group mb-4">
                                 <label for="visibility" class="fw-medium">Visibility <span

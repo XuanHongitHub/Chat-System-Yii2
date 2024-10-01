@@ -69,6 +69,7 @@ class ChatRooms extends \yii\db\ActiveRecord
             'name' => 'Name',
             'created_by' => 'Created By',
             'created_at' => 'Created At',
+            'visibility' => 'Visibility',
             'updated_at' => 'Updated At',
         ];
     }
@@ -111,6 +112,12 @@ class ChatRooms extends \yii\db\ActiveRecord
     {
         return new \common\models\query\ChatRoomsQuery(get_called_class());
     }
+
+    public function getChatRoomUserCount()
+    {
+        return $this->getChatRoomUser()->count();
+    }
+
 
     public function beforeSave($insert)
     {

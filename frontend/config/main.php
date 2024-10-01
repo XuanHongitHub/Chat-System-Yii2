@@ -41,8 +41,7 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
-
-                // 'chat/get-contacts' => 'chat/chat/get-contacts',
+                'chat/get-contacts' => 'chat/get-contacts',
                 'chat/add-contact' => 'chat/add-contact',
                 'chat-room/add-room' => 'chat-room/add-room',
             ],
