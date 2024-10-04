@@ -17,11 +17,6 @@ use yii;
 
 class ChatController extends Controller
 {
-    public function actionIndex()
-    {
-        return $this->render('index');
-    }
-
     public function actionSearchUser($username)
     {
         $users = User::find()
@@ -46,9 +41,10 @@ class ChatController extends Controller
 
         return $this->asJson($result);
     }
+
     public function actionGetAddedContacts()
     {
-        $userId = Yii::$app->user->id; // Lấy ID của người dùng đang đăng nhập
+        $userId = Yii::$app->user->id;
         $contacts = Contacts::find()->where(['user_id' => $userId])->with('contactUser')->all();
 
         $addedContacts = [];
@@ -63,15 +59,9 @@ class ChatController extends Controller
         return $this->asJson($addedContacts);
     }
 
-    public function actionGetAllUsers()
-    {
-        $users = User::find()->all(); // Lấy tất cả người dùng
-
-        return $this->asJson($users);
-    }
     public function actionGetContacts()
     {
-        $userId = Yii::$app->user->id; // Lấy ID của người dùng đang đăng nhập
+        $userId = Yii::$app->user->id;
         $contacts = Contacts::find()->where(['user_id' => $userId])->with('contactUser')->all();
 
         $contactData = [];
@@ -79,14 +69,15 @@ class ChatController extends Controller
             $contactUser = User::findOne($contact->contact_user_id);
             if ($contactUser) {
                 $contactData[] = [
-                    'id' => $contactUser->id, // Lấy ID người dùng
-                    'username' => $contactUser->username // Lấy tên người dùng
+                    'id' => $contactUser->id,
+                    'username' => $contactUser->username
                 ];
             }
         }
 
-        return $this->asJson($contactData); // Trả về danh sách contact
+        return $this->asJson($contactData);
     }
+
     public function actionAddContact()
     {
         if (Yii::$app->request->isAjax && Yii::$app->request->isPost) {
@@ -94,20 +85,18 @@ class ChatController extends Controller
 
             Yii::info("Contact User ID: $contactUserId", __METHOD__);
 
-            // Thêm liên hệ cho người dùng hiện tại
             $model = new Contacts();
             $model->contact_user_id = $contactUserId;
-            $model->user_id = Yii::$app->user->id; // Thêm user_id của người dùng đang đăng nhập
-            $model->created_at = time(); // Gán thời gian hiện tại cho created_at
-            $model->updated_at = time(); // Gán thời gian hiện tại cho updated_at
+            $model->user_id = Yii::$app->user->id;
+            $model->created_at = time();
+            $model->updated_at = time();
 
             if ($model->save()) {
-                // Thêm liên hệ cho người dùng đối tác
                 $reverseModel = new Contacts();
-                $reverseModel->contact_user_id = Yii::$app->user->id; // ID của người dùng hiện tại
-                $reverseModel->user_id = $contactUserId; // ID của người dùng đối tác
-                $reverseModel->created_at = time(); // Gán thời gian hiện tại cho created_at
-                $reverseModel->updated_at = time(); // Gán thời gian hiện tại cho updated_at
+                $reverseModel->contact_user_id = Yii::$app->user->id;
+                $reverseModel->user_id = $contactUserId;
+                $reverseModel->created_at = time();
+                $reverseModel->updated_at = time();
 
                 if ($reverseModel->save()) {
                     return $this->asJson(['success' => true]);
@@ -121,7 +110,6 @@ class ChatController extends Controller
 
         throw new BadRequestHttpException('Invalid request.');
     }
-
 
     public function actionAddRoom()
     {
@@ -188,9 +176,11 @@ class ChatController extends Controller
 
         Yii::debug("Current User ID: " . $currentUserId);
 
+        // Kiểm tra nếu $id là một contact
         $contact = Contacts::findOne($id);
 
         if ($contact) {
+            // Lấy tin nhắn giữa người dùng hiện tại và contact
             $messages = Messages::find()
                 ->where([
                     'or',
@@ -224,8 +214,38 @@ class ChatController extends Controller
             return $this->asJson(['messages' => $data]);
         }
 
-        return $this->asJson(['messages' => [], 'error' => 'Contact not found.']);
+        // Nếu không tìm thấy contact, kiểm tra xem có phải là room hay không
+        $chatRoom = ChatRooms::findOne($id);
+
+        if ($chatRoom) {
+            // Lấy tin nhắn trong phòng chat
+            $messages = Messages::find()
+                ->where(['chat_room_id' => $chatRoom->id])
+                ->with('user')
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+
+            $data = [];
+            foreach ($messages as $message) {
+                $data[] = [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'created_at' => date('Y-m-d H:i:s', $message->created_at),
+                    'user' => [
+                        'id' => $message->user->id,
+                        'avatar' => $message->user->avatar ?: 'default-avatar.png',
+                    ],
+                    'isMine' => ($message->user_id === $currentUserId),
+                ];
+            }
+
+            return $this->asJson(['messages' => $data]);
+        }
+
+        // Nếu không phải là contact hay room
+        return $this->asJson(['messages' => [], 'error' => 'Contact or Room not found.']);
     }
+
 
     public function actionSendMessage()
     {
@@ -301,4 +321,15 @@ class ChatController extends Controller
             ];
         }
     }
+
+
+
+
+
+    // public function actionGetAllUsers()
+    // {
+    //     $users = User::find()->all(); 
+
+    //     return $this->asJson($users);
+    // }
 }
