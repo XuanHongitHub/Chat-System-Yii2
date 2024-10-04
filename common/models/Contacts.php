@@ -81,4 +81,25 @@ class Contacts extends \yii\db\ActiveRecord
     {
         return new \common\models\query\ContactsQuery(get_called_class());
     }
+    public function getChatRoom()
+    {
+        return $this->hasOne(ChatRooms::class, ['id' => 'chat_room_id']);
+    }
+    public function getLastMessage()
+    {
+        return Messages::find()
+            ->where([
+                'or',
+                ['recipient_id' => $this->id],
+                ['user_id' => $this->id]
+            ])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->limit(1)
+            ->one();
+    }
+
+    public function getMessages()
+    {
+        return $this->hasMany(Messages::class, ['recipient_id' => 'id']);
+    }
 }

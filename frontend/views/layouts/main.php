@@ -11,6 +11,8 @@ use yii\bootstrap5\Nav;
 use yii\bootstrap5\NavBar;
 
 AppAsset::register($this);
+
+
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -34,10 +36,10 @@ AppAsset::register($this);
 
 <body class="d-flex flex-column h-100">
     <?php $this->beginBody() ?>
-
+    <?php $contacts = $this->params['contacts'] ?? []; ?>
     <div class="container-fluid">
         <div class="row-ct">
-            <?php echo $this->render('_sidebar'); ?>
+
             <?= Breadcrumbs::widget([
                 'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
             ]) ?>

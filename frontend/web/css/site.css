@@ -372,6 +372,7 @@ a.desc:after {
 
 .chat .messages-chat {
     padding: 25px 35px;
+
 }
 
 .chat .messages-chat .message {
@@ -515,4 +516,56 @@ a.desc:after {
 
 .clickable {
     cursor: pointer;
+}
+
+.friend-item {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fff;
+    transition: background-color 0.2s ease;
+}
+
+.friend-item:hover {
+    background-color: #f6f3ff;
+    /* Màu nền khi hover */
+}
+
+.avatar-container {
+    padding-right: 0.25rem;
+
+}
+
+.avatar {
+    width: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.friend-name {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.friend-phone {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.highlight {
+    font-weight: bold;
+}
+
+.btn {
+    margin-left: 10px;
+}
+
+#messagesChat {
+    height: calc(100vh - 170px);
+    width: 72%;
+    overflow-y: auto;
+    padding: 10px;
+    position: absolute;
+
 }

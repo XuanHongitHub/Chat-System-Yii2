@@ -12,10 +12,63 @@ use common\models\ChatRoomUser;
 use app\models\ChatRooms as ChatRoomsSearch;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\BadRequestHttpException;
 use yii;
 
 class ChatController extends Controller
 {
+    public function actionIndex()
+    {
+        return $this->render('index');
+    }
+
+    public function actionSearchUser($username)
+    {
+        $users = User::find()
+            ->where(['like', 'username', $username])
+            ->all();
+
+        // Lấy danh sách ID của các liên hệ đã được thêm
+        $contactIds = Contacts::find()
+            ->select('contact_user_id')
+            ->where(['user_id' => Yii::$app->user->id])
+            ->column(); // Sử dụng column() để lấy danh sách ID
+
+        $result = [];
+        foreach ($users as $user) {
+            $result[] = [
+                'id' => $user->id,
+                'username' => $user->username,
+                // 'avatar' => $user->avatar,
+                'isAdded' => in_array($user->id, $contactIds), // Kiểm tra xem người dùng đã được thêm vào danh sách liên hệ
+            ];
+        }
+
+        return $this->asJson($result);
+    }
+    public function actionGetAddedContacts()
+    {
+        $userId = Yii::$app->user->id; // Lấy ID của người dùng đang đăng nhập
+        $contacts = Contacts::find()->where(['user_id' => $userId])->with('contactUser')->all();
+
+        $addedContacts = [];
+        foreach ($contacts as $contact) {
+            $addedContacts[] = [
+                'id' => $contact->contact_user_id,
+                'username' => $contact->contactUser->username,
+                'avatar' => $contact->contactUser->avatar,
+            ];
+        }
+
+        return $this->asJson($addedContacts);
+    }
+
+    public function actionGetAllUsers()
+    {
+        $users = User::find()->all(); // Lấy tất cả người dùng
+
+        return $this->asJson($users);
+    }
     public function actionGetContacts()
     {
         $userId = Yii::$app->user->id; // Lấy ID của người dùng đang đăng nhập
@@ -34,32 +87,42 @@ class ChatController extends Controller
 
         return $this->asJson($contactData); // Trả về danh sách contact
     }
-
-
     public function actionAddContact()
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (Yii::$app->request->isAjax && Yii::$app->request->isPost) {
+            $contactUserId = Yii::$app->request->post('contact_user_id');
 
-        $username = Yii::$app->request->post('username');
-        if ($username) {
-            // Kiểm tra xem user có tồn tại không
-            $user = User::find()->where(['username' => $username])->one();
-            if ($user) {
-                $contact = new Contacts();
-                $contact->user_id = Yii::$app->user->id; // User hiện tại
-                $contact->contact_user_id = $user->id; // User được thêm
-                $contact->created_at = time(); // Thời gian tạo
-                $contact->updated_at = time(); // Thời gian cập nhật
+            Yii::info("Contact User ID: $contactUserId", __METHOD__);
 
-                if ($contact->save()) {
-                    return ['status' => 'success', 'message' => 'Liên hệ đã được thêm!'];
+            // Thêm liên hệ cho người dùng hiện tại
+            $model = new Contacts();
+            $model->contact_user_id = $contactUserId;
+            $model->user_id = Yii::$app->user->id; // Thêm user_id của người dùng đang đăng nhập
+            $model->created_at = time(); // Gán thời gian hiện tại cho created_at
+            $model->updated_at = time(); // Gán thời gian hiện tại cho updated_at
+
+            if ($model->save()) {
+                // Thêm liên hệ cho người dùng đối tác
+                $reverseModel = new Contacts();
+                $reverseModel->contact_user_id = Yii::$app->user->id; // ID của người dùng hiện tại
+                $reverseModel->user_id = $contactUserId; // ID của người dùng đối tác
+                $reverseModel->created_at = time(); // Gán thời gian hiện tại cho created_at
+                $reverseModel->updated_at = time(); // Gán thời gian hiện tại cho updated_at
+
+                if ($reverseModel->save()) {
+                    return $this->asJson(['success' => true]);
+                } else {
+                    return $this->asJson(['success' => false, 'error' => $reverseModel->getErrors()]);
                 }
             } else {
-                return ['status' => 'error', 'message' => 'User không tồn tại!'];
+                return $this->asJson(['success' => false, 'error' => $model->getErrors()]);
             }
         }
-        return ['status' => 'error', 'message' => 'Tên tài khoản không hợp lệ.'];
+
+        throw new BadRequestHttpException('Invalid request.');
     }
+
+
     public function actionAddRoom()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -119,51 +182,123 @@ class ChatController extends Controller
         }
     }
 
+    public function actionMessages($id)
+    {
+        $currentUserId = Yii::$app->user->id;
+
+        Yii::debug("Current User ID: " . $currentUserId);
+
+        $contact = Contacts::findOne($id);
+
+        if ($contact) {
+            $messages = Messages::find()
+                ->where([
+                    'or',
+                    [
+                        'user_id' => $currentUserId,
+                        'recipient_id' => $contact->contact_user_id
+                    ],
+                    [
+                        'user_id' => $contact->contact_user_id,
+                        'recipient_id' => $currentUserId
+                    ]
+                ])
+                ->with('user')
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+
+            $data = [];
+            foreach ($messages as $message) {
+                $data[] = [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'created_at' => date('Y-m-d H:i:s', $message->created_at),
+                    'user' => [
+                        'id' => $message->user->id,
+                        'avatar' => $message->user->avatar ?: 'default-avatar.png',
+                    ],
+                    'isMine' => ($message->user_id === $currentUserId),
+                ];
+            }
+
+            return $this->asJson(['messages' => $data]);
+        }
+
+        return $this->asJson(['messages' => [], 'error' => 'Contact not found.']);
+    }
 
     public function actionSendMessage()
     {
-        $model = new Messages();
-        $model->load(Yii::$app->request->post());
-        $model->user_id = Yii::$app->user->id;
-        $model->created_at = time();
-        $model->updated_at = time();
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if ($model->save()) {
-            return $this->asJson(['success' => true, 'message' => $model]);
+        $request = Yii::$app->request;
+        $chatId = $request->post('chatId');
+        $messageContent = $request->post('message');
+        $isRoom = $request->post('isRoom') === 'true';
+
+
+        if (empty($messageContent)) {
+            Yii::error("Message content is empty", __METHOD__);
+            return [
+                'success' => false,
+                'errors' => ['message' => ['Nội dung tin nhắn không được để trống.']]
+            ];
         }
 
-        return $this->asJson(['success' => false]);
-    }
+        $message = new Messages();
+        $message->content = $messageContent;
+        $message->user_id = Yii::$app->user->id;
 
-    public function actionGetMessages($chatRoomId)
-    {
-        $messages = Messages::find()->where(['chat_room_id' => $chatRoomId])->all();
-        return $this->asJson($messages);
-    }
 
-    public function actionJoinRoom($id)
-    {
-        $chatRoom = $this->findChatRoom($id);
+        if ($isRoom) {
+            $message->chat_room_id = $chatId;
+            $message->recipient_id = null;
 
-        if ($chatRoom) {
-            $chatRoomUser = new ChatRoomUser();
-            $chatRoomUser->user_id = Yii::$app->user->id;
-            $chatRoomUser->chat_room_id = $chatRoom->id;
-            $chatRoomUser->joined_at = time();
-            $chatRoomUser->save();
+            if (!ChatRooms::find()->where(['id' => $chatId])->exists()) {
+                return [
+                    'success' => false,
+                    'errors' => ['chat_room_id' => ['ID phòng chat không hợp lệ.']]
+                ];
+            }
+        } else {
+            $contact = Contacts::find()->where(['id' => $chatId])->one();
 
-            return $this->redirect(['view', 'id' => $chatRoom->id]);
+            if ($contact) {
+                $recipientId = $contact->contact_user_id;
+
+                if (!User::find()->where(['id' => $recipientId])->exists()) {
+                    return [
+                        'success' => false,
+                        'errors' => ['recipient_id' => ['ID người nhận không hợp lệ.']]
+                    ];
+                }
+
+                $message->recipient_id = $recipientId;
+                $message->chat_room_id = null;
+            } else {
+                return [
+                    'success' => false,
+                    'errors' => ['recipient_id' => ['Liên hệ không tìm thấy.']]
+                ];
+            }
         }
 
-        throw new NotFoundHttpException('Room not found.');
-    }
 
-    protected function findChatRoom($id)
-    {
-        if (($model = ChatRooms::findOne($id)) !== null) {
-            return $model;
+        $message->created_at = time();
+        $message->updated_at = time();
+        Yii::error("Message prepared for saving: " . json_encode($message->attributes), __METHOD__);
+
+        if ($message->save()) {
+            Yii::error("Message saved successfully with ID: " . $message->id, __METHOD__);
+            return [
+                'success' => true,
+                'data' => $message,
+            ];
+        } else {
+            return [
+                'success' => false,
+                'errors' => $message->getErrors(),
+            ];
         }
-
-        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

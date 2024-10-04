@@ -10,13 +10,14 @@ use Yii;
  * @property int $id
  * @property int $chat_room_id
  * @property int $user_id
+ * @property int $recipient_id
  * @property string $content
  * @property int $created_at
  * @property int $updated_at
  *
  * @property ChatRooms $chatRoom
  * @property MessageStatus[] $messageStatuses
- * @property User $user
+ * @property User $recipient
  */
 class Messages extends \yii\db\ActiveRecord
 {
@@ -34,11 +35,10 @@ class Messages extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['chat_room_id', 'user_id', 'content', 'created_at', 'updated_at'], 'required'],
-            [['chat_room_id', 'user_id', 'created_at', 'updated_at'], 'integer'],
-            [['content'], 'string'],
-            [['chat_room_id'], 'exist', 'skipOnError' => true, 'targetClass' => ChatRooms::class, 'targetAttribute' => ['chat_room_id' => 'id']],
-            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+            [['content', 'user_id'], 'required'],
+            [['user_id', 'recipient_id', 'chat_room_id', 'created_at', 'updated_at'], 'integer'],
+            [['content'], 'string', 'max' => 255],
+            [['recipient_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['recipient_id' => 'id']],
         ];
     }
 
@@ -51,6 +51,7 @@ class Messages extends \yii\db\ActiveRecord
             'id' => 'ID',
             'chat_room_id' => 'Chat Room ID',
             'user_id' => 'User ID',
+            'recipient_id' => 'Recipient ID',
             'content' => 'Content',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -78,15 +79,18 @@ class Messages extends \yii\db\ActiveRecord
     }
 
     /**
-     * Gets query for [[User]].
+     * Gets query for [[Recipient]].
      *
      * @return \yii\db\ActiveQuery|\common\models\query\UserQuery
      */
+    public function getRecipient()
+    {
+        return $this->hasOne(User::class, ['id' => 'recipient_id']);
+    }
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
     }
-
     /**
      * {@inheritdoc}
      * @return \common\models\query\MessagesQuery the active query used by this AR class.
@@ -94,5 +98,17 @@ class Messages extends \yii\db\ActiveRecord
     public static function find()
     {
         return new \common\models\query\MessagesQuery(get_called_class());
+    }
+
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            if ($insert) {
+                $this->created_at = time();
+            }
+            $this->updated_at = time();
+            return true;
+        }
+        return false;
     }
 }

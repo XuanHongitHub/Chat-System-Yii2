@@ -7,6 +7,7 @@ use common\models\ChatRoomUser;
 use app\models\ChatRooms as ChatRoomsSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
 use yii;
 

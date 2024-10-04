@@ -13,6 +13,7 @@ return [
     'controllerNamespace' => 'frontend\controllers',
     'components' => [
         'request' => [
+            'enableCsrfValidation' => true,
             'csrfParam' => '_csrf-frontend',
         ],
         'user' => [
@@ -36,14 +37,23 @@ return [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-
+        'formatter' => [
+            'class' => 'yii\i18n\Formatter',
+            'timeZone' => 'Asia/Ho_Chi_Minh',
+        ],
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'chat' => 'chat/index',
                 'chat/get-contacts' => 'chat/get-contacts',
                 'chat/add-contact' => 'chat/add-contact',
                 'chat-room/add-room' => 'chat-room/add-room',
+                'search-user' => 'chat/search-user',
+                'chat/contact/messages/<id:\d+>' => 'chat/contact/messages',
+                'chat/messages/<id:\d+>' => 'chat/messages',
+                'chat/sendMessage' => 'chat/send-message',
+                'chat/message/send-message' => 'chat/message/send-message',
             ],
         ],
 

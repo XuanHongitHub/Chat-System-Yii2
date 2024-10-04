@@ -6933,7 +6933,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "yiisoft/yii2-bootstrap5": 20,
-        "php-ffmpeg/php-ffmpeg": 20
+        "php-ffmpeg/php-ffmpeg": 20,
+        "cboden/ratchet": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

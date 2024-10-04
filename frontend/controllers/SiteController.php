@@ -3,6 +3,7 @@
 namespace frontend\controllers;
 
 use common\models\Contacts;
+use common\models\Messages;
 use common\models\User;
 
 use frontend\models\ResendVerificationEmailForm;
@@ -18,6 +19,9 @@ use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
+use common\models\ChatRooms;
+use common\models\ChatRoomUser;
+use yii\data\ActiveDataProvider;
 
 /**
  * Site controller
@@ -78,7 +82,74 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $currentUserId = Yii::$app->user->id;
+
+        $contacts = Contacts::find()
+            ->with('user')
+            ->where(['user_id' => $currentUserId])
+            ->all();
+
+        $activeContactId = null;
+
+        $chatRooms = ChatRooms::find()->with('lastMessage')->all();
+
+        $contactData = [];
+        foreach ($contacts as $contact) {
+            $avatarUrl = !empty($contact->user->avatar) ? $contact->user->avatar : 'https://icons.veryicon.com/png/o/miscellaneous/common-icons-30/my-selected-5.png';
+            $lastMessage = Messages::find()
+                ->where([
+                    'or',
+                    ['recipient_id' => $contact->contact_user_id],
+                    ['user_id' => $contact->user_id]
+                ])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+            $lastMessageContent = $lastMessage ? $lastMessage->content : 'No messages';
+            $relativeTime = $lastMessage ? Yii::$app->formatter->asRelativeTime($lastMessage->created_at) : '';
+
+
+
+            if ($contact->user_id == $currentUserId) {
+                $contactData[] = [
+                    'id' => $contact->id,
+                    'avatarUrl' => $avatarUrl,
+                    'username' => $contact->contactUser->username,
+                    'lastMessageContent' => $lastMessageContent,
+                    'relativeTime' => $relativeTime,
+                ];
+            } else {
+                $contactData[] = [
+                    'id' => $contact->id,
+                    'avatarUrl' => $contact->contactUser->avatar,
+                    'username' => $contact->user->username,
+                    'lastMessageContent' => $lastMessageContent,
+                    'relativeTime' => $relativeTime,
+                ];
+            }
+        }
+
+        $roomData = [];
+        foreach ($chatRooms as $room) {
+            $avatarUrl = 'https://pngteam.com/images/chat-png-2097x1782_6a4db7cf_transparent_202aef.png.png';
+            $lastMessage = $room->lastMessage;
+            $lastMessageContent = $lastMessage ? $lastMessage->content : 'No messages';
+            $relativeTime = $lastMessage ? Yii::$app->formatter->asRelativeTime($lastMessage->created_at) : '';
+
+            $roomData[] = [
+                'id' => $room->id,
+                'name' => $room->name,
+                'avatarUrl' => $avatarUrl,
+                'lastMessageContent' => $lastMessageContent,
+                'relativeTime' => $relativeTime,
+            ];
+        }
+
+        return $this->render('index', [
+            'contacts' => $contactData,
+            'activeContactId' => $activeContactId,
+            'roomData' => $roomData,
+        ]);
     }
 
     /**
