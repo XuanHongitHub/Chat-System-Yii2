@@ -129,8 +129,11 @@ class ChatRooms extends \yii\db\ActiveRecord
     }
     public function getLastMessage()
     {
-        return $this->hasOne(Messages::class, ['chat_room_id' => 'id'])
-            ->orderBy(['created_at' => SORT_DESC]);
+        return Messages::find()
+            ->where(['chat_room_id' => $this->id])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->limit(1)
+            ->one();
     }
 
     public function beforeSave($insert)

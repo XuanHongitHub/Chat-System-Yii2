@@ -90,8 +90,8 @@ class Contacts extends \yii\db\ActiveRecord
         return Messages::find()
             ->where([
                 'or',
-                ['recipient_id' => $this->id],
-                ['user_id' => $this->id]
+                ['user_id' => Yii::$app->user->id, 'recipient_id' => $this->contact_user_id],
+                ['user_id' => $this->contact_user_id, 'recipient_id' => Yii::$app->user->id]
             ])
             ->orderBy(['created_at' => SORT_DESC])
             ->limit(1)

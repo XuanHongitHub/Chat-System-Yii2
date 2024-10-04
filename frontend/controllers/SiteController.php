@@ -84,55 +84,53 @@ class SiteController extends Controller
     {
         $currentUserId = Yii::$app->user->id;
 
+        // Lấy tất cả các contact của user hiện tại
         $contacts = Contacts::find()
             ->with('user')
             ->where(['user_id' => $currentUserId])
             ->all();
 
         $activeContactId = null;
-
-        $chatRooms = ChatRooms::find()->with('lastMessage')->all();
+        $chatRooms = ChatRooms::find()->all();
 
         $contactData = [];
         foreach ($contacts as $contact) {
             $avatarUrl = !empty($contact->user->avatar) ? $contact->user->avatar : 'https://icons.veryicon.com/png/o/miscellaneous/common-icons-30/my-selected-5.png';
+
+            // Lấy tin nhắn cuối cùng cho từng contact
             $lastMessage = Messages::find()
                 ->where([
                     'or',
-                    ['recipient_id' => $contact->contact_user_id],
-                    ['user_id' => $contact->user_id]
+                    ['user_id' => $currentUserId, 'recipient_id' => $contact->contact_user_id],
+                    ['user_id' => $contact->contact_user_id, 'recipient_id' => $currentUserId]
                 ])
-                ->orderBy(['id' => SORT_DESC])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->limit(1)
                 ->one();
 
             $lastMessageContent = $lastMessage ? $lastMessage->content : 'No messages';
             $relativeTime = $lastMessage ? Yii::$app->formatter->asRelativeTime($lastMessage->created_at) : '';
 
-
-
-            if ($contact->user_id == $currentUserId) {
-                $contactData[] = [
-                    'id' => $contact->id,
-                    'avatarUrl' => $avatarUrl,
-                    'username' => $contact->contactUser->username,
-                    'lastMessageContent' => $lastMessageContent,
-                    'relativeTime' => $relativeTime,
-                ];
-            } else {
-                $contactData[] = [
-                    'id' => $contact->id,
-                    'avatarUrl' => $contact->contactUser->avatar,
-                    'username' => $contact->user->username,
-                    'lastMessageContent' => $lastMessageContent,
-                    'relativeTime' => $relativeTime,
-                ];
-            }
+            $contactData[] = [
+                'id' => $contact->id,
+                'avatarUrl' => $avatarUrl,
+                'username' => $contact->contactUser->username,
+                'lastMessageContent' => $lastMessageContent,
+                'relativeTime' => $relativeTime,
+            ];
         }
 
         $roomData = [];
         foreach ($chatRooms as $room) {
             $avatarUrl = 'https://pngteam.com/images/chat-png-2097x1782_6a4db7cf_transparent_202aef.png.png';
-            $lastMessage = $room->lastMessage;
+
+            // Lấy tin nhắn cuối cùng cho từng phòng chat
+            $lastMessage = Messages::find()
+                ->where(['chat_room_id' => $room->id])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->limit(1)
+                ->one();
+
             $lastMessageContent = $lastMessage ? $lastMessage->content : 'No messages';
             $relativeTime = $lastMessage ? Yii::$app->formatter->asRelativeTime($lastMessage->created_at) : '';
 
@@ -147,10 +145,11 @@ class SiteController extends Controller
 
         return $this->render('index', [
             'contacts' => $contactData,
-            'activeContactId' => $activeContactId,
             'roomData' => $roomData,
+            'activeContactId' => $activeContactId,
         ]);
     }
+
 
     /**
      * Logs in a user.
