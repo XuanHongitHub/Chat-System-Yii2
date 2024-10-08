@@ -14,6 +14,8 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\BadRequestHttpException;
 use yii;
+use Pusher\Pusher;
+
 
 class ChatController extends Controller
 {
@@ -256,7 +258,6 @@ class ChatController extends Controller
         $messageContent = $request->post('message');
         $isRoom = $request->post('isRoom') === 'true';
 
-
         if (empty($messageContent)) {
             Yii::error("Message content is empty", __METHOD__);
             return [
@@ -268,7 +269,6 @@ class ChatController extends Controller
         $message = new Messages();
         $message->content = $messageContent;
         $message->user_id = Yii::$app->user->id;
-
 
         if ($isRoom) {
             $message->chat_room_id = $chatId;
@@ -303,13 +303,32 @@ class ChatController extends Controller
             }
         }
 
-
         $message->created_at = time();
         $message->updated_at = time();
         Yii::error("Message prepared for saving: " . json_encode($message->attributes), __METHOD__);
 
         if ($message->save()) {
             Yii::error("Message saved successfully with ID: " . $message->id, __METHOD__);
+
+            // $pusher = Yii::$app->pusher;
+
+            $pusher = new Pusher(
+                '9417daa5964067a88896',
+                '761a296ebcc2a0fed0ae',
+                '1874606',
+                [
+                    'cluster' => 'ap1',
+                    'useTLS' => true
+                ]
+            );
+
+            $data = ['message' => $messageContent, 'chatId' => $chatId, 'isRoom' => $isRoom];
+            try {
+                $pusher->trigger('chat-channel', 'new-message', $data);
+            } catch (\Exception $e) {
+                Yii::error("Pusher error: " . $e->getMessage(), __METHOD__);
+            }
+
             return [
                 'success' => true,
                 'data' => $message,
@@ -322,14 +341,30 @@ class ChatController extends Controller
         }
     }
 
+    public function actionGetSenderId($chatId, $isRoom = null)
+    {
+        if ($isRoom === 'true') {
+            // Tìm kiếm tin nhắn gần đây nhất trong phòng chat
+            $lastMessage = Messages::find()
+                ->where(['chat_room_id' => $chatId])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->one();
 
+            if ($lastMessage) {
+                // Trả về user_id của người gửi tin nhắn gần đây nhất
+                return $this->asJson(['sender_id' => $lastMessage->user_id]);
+            } else {
+                return $this->asJson(['error' => 'No messages found in chat room']);
+            }
+        } else {
+            // Tìm kiếm trong bảng Contacts
+            $contact = Contacts::find()->where(['id' => $chatId])->one();
 
-
-
-    // public function actionGetAllUsers()
-    // {
-    //     $users = User::find()->all(); 
-
-    //     return $this->asJson($users);
-    // }
+            if ($contact) {
+                return $this->asJson(['user_id' => $contact->user_id]);
+            } else {
+                return $this->asJson(['error' => 'Contact not found']);
+            }
+        }
+    }
 }

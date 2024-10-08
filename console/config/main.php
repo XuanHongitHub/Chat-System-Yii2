@@ -20,7 +20,13 @@ return [
         'fixture' => [
             'class' => \yii\console\controllers\FixtureController::class,
             'namespace' => 'common\fixtures',
-          ],
+        ],
+        //    'nodeSocket' => array(
+        // 'class' => 'application.extensions.yii-node-socket.lib.php.NodeSocket',
+        // 'host' => 'localhost',  // default is 127.0.0.1, can be ip or domain name, without http
+        // 'port' => 3001      // default is 3001, should be integer
+        //    ),
+        'node-socket' => '\YiiNodeSocket\NodeSocketCommand',
     ],
     'components' => [
         'log' => [
@@ -33,4 +39,7 @@ return [
         ],
     ],
     'params' => $params,
+    // 'commandMap' => array(
+    //     'node-socket' => 'common.extensions.yii-node-socket.lib.php.NodeSocketCommand'
+    // )
 ];

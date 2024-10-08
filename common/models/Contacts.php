@@ -56,7 +56,6 @@ class Contacts extends \yii\db\ActiveRecord
     /**
      * Gets query for [[ContactUser]].
      *
-     * @return \yii\db\ActiveQuery|\common\models\query\UserQuery
      */
     public function getContactUser()
     {
@@ -66,7 +65,6 @@ class Contacts extends \yii\db\ActiveRecord
     /**
      * Gets query for [[User]].
      *
-     * @return \yii\db\ActiveQuery|\common\models\query\UserQuery
      */
     public function getUser()
     {

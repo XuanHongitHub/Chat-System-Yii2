@@ -168,32 +168,33 @@ $(document).ready(function () {
 
 // Active Contact Chat
 function openChat(id, isRoom = false) {
+    // Cập nhật id của chat hiện tại và kiểm tra loại chat (phòng hay contact)
     updateChatId(id, isRoom);
 
-    if (isRoom) {
-        $.ajax({
-            url: '/chat/messages/' + id,
-            method: 'GET',
-            success: function (data) {
-                updateChatUI(data, true);
-            },
-            error: function () {
-                console.log('Error loading room messages');
-            }
-        });
+    // Cập nhật tên contact hoặc phòng trong phần tử #chatTitle
+    let name = isRoom ? document.querySelector(`.discussion[data-room-id="${id}"] .name`).innerText :
+        document.querySelector(`.discussion[data-contact-id="${id}"] .name`).innerText;
+
+    if (name) {
+        document.querySelector('#chatTitle').innerText = name;
     } else {
-        $.ajax({
-            url: '/chat/messages/' + id,
-            method: 'GET',
-            success: function (data) {
-                updateChatUI(data);
-            },
-            error: function () {
-                console.log('Error loading contact messages');
-            }
-        });
+        document.querySelector('#chatTitle').innerText = 'Không có tên';
     }
+
+    // Gửi yêu cầu lấy tin nhắn
+    const url = isRoom ? '/chat/messages/' + id : '/chat/messages/' + id;
+    $.ajax({
+        url: url,
+        method: 'GET',
+        success: function (data) {
+            updateChatUI(data, isRoom);
+        },
+        error: function () {
+            console.log('Lỗi tải tin nhắn');
+        }
+    });
 }
+
 
 // Cập nhật chatId + Check isRoom
 function updateChatId(chatId, isRoom) {
@@ -254,13 +255,75 @@ function updateChatUI(data, isRoom = false) {
 }
 
 $(document).ready(function () {
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('9417daa5964067a88896', {
+        cluster: 'ap1',
+        forceTLS: true
+    });
+
+    var channel = pusher.subscribe('chat-channel');
+    channel.bind('new-message', async function (data) {
+        console.log("Current User ID:", currentUserId);
+
+        const senderId = await getSenderId(data.chatId);
+        console.log("Sender ID:", senderId);
+
+        var newMessage;
+        var lastSenderId = null;
+        if (senderId == currentUserId) {
+            if (senderId !== lastSenderId) {
+                newMessage = `
+                    <div class="message">
+                        <div class="response">
+                            <p class="text">${data.message} </p>
+                        </div>
+                    </div>
+                `;
+                lastSenderId = senderId;
+            } else {
+                newMessage = `
+                    <div class="message text-only">
+                        <div class="response">
+                            <p class="text">${data.message} </p>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            // Tin nhắn từ người khác
+            if (senderId !== lastSenderId) {
+                newMessage = `
+                    <div class="message">
+                            <div class="photo" style="background-image: url(${senderId.avatar ? senderId.avatar : 'https://icons.veryicon.com/png/o/miscellaneous/common-icons-30/my-selected-5.png'})" class="avatar" alt="${senderId.username}">
+                            <div class="online"></div>
+                        </div>
+                            <p class="text">${data.message}</p>
+                    </div>
+                `;
+                lastSenderId = senderId;
+            } else {
+                newMessage = `
+                    <div class="message">
+                            <p class="text">${data.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        $('#messagesChat').append(newMessage);
+        messagesChat.scrollTop = messagesChat.scrollHeight;
+    });
+
     $('#sendMessageButton').on('click', function () {
         const chatId = document.getElementById('currentChatId').value;
         const message = document.getElementById('messageInput').value;
         const isRoom = document.getElementById('isRoom').value === "true";
-        console.log('Chat ID:', chatId);
-        console.log('Message:', message);
-        console.log('Is Room:', isRoom);
+
+        if (!chatId || !message) {
+            console.error('Chat ID và nội dung tin nhắn không được để trống.');
+            return;
+        }
 
         $.ajax({
             url: 'chat/send-message',
@@ -276,20 +339,6 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success) {
                     document.getElementById('messageInput').value = '';
-
-                    var newMessage = `
-                        <div class="message text-only">
-                            <div class="response">
-                                <p class="text">${message}</p>
-                            </div>
-                        </div>
-                        <p class="response-time time">Just now</p>
-                    `;
-
-                    $('#messagesChat').append(newMessage);
-
-                    var messagesChat = document.getElementById('messagesChat');
-                    messagesChat.scrollTop = messagesChat.scrollHeight;
                 } else {
                     console.error('Error sending message:', response.errors);
                 }
@@ -300,23 +349,41 @@ $(document).ready(function () {
         });
     });
 });
-function fetchNewMessages() {
-    const chatId = document.getElementById('currentChatId').value;
-    const isRoom = document.getElementById('isRoom').value === "true";
-
-    if (chatId && chatId.trim() !== "") {
-        $.ajax({
-            url: `/chat/messages/${chatId}`,
-            method: 'GET',
-            success: function (data) {
-                updateChatUI(data, isRoom);
-            },
-            error: function () {
-                console.log('Error loading new messages');
+function getSenderId(chatId) {
+    return fetch(`/chat/get-sender-id?chatId=${chatId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                console.log("User ID:", data.user_id);
+                return data.user_id; // Trả về user_id
+            } else {
+                console.error(data.error); // Xử lý lỗi
+                return null; // Hoặc bạn có thể throw một lỗi
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            return null; // Hoặc bạn có thể throw một lỗi
         });
-    }
 }
 
-setInterval(fetchNewMessages, 2000);
+// function fetchNewMessages() {
+//     const chatId = document.getElementById('currentChatId').value;
+//     const isRoom = document.getElementById('isRoom').value === "true";
+
+//     if (chatId && chatId.trim() !== "") {
+//         $.ajax({
+//             url: `/chat/messages/${chatId}`,
+//             method: 'GET',
+//             success: function (data) {
+//                 updateChatUI(data, isRoom);
+//             },
+//             error: function () {
+//                 console.log('Error loading new messages');
+//             }
+//         });
+//     }
+// }
+
+// setInterval(fetchNewMessages, 2000);
 

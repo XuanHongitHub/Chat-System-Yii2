@@ -41,6 +41,21 @@ return [
             'class' => 'yii\i18n\Formatter',
             'timeZone' => 'Asia/Ho_Chi_Minh',
         ],
+        'pusher' => [
+            'class' => \Pusher\Pusher::class,
+            'app_id' => '1874606',
+            'key' => '9417daa5964067a88896',
+            'secret' => '761a296ebcc2a0fed0ae',
+            'cluster' => 'ap1',
+        ],
+        'nodeSocket' => [
+            'class' => '\YiiNodeSocket\NodeSocket',
+            'host' => 'localhost',   // Địa chỉ máy chủ Node.js
+            'port' => 3001,          // Port của Node.js server
+            'allowedServerAddresses' => [
+                "localhost",          // Các địa chỉ IP được phép kết nối
+            ],
+        ],
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
@@ -54,6 +69,8 @@ return [
                 'chat/messages/<id:\d+>' => 'chat/messages',
                 'chat/sendMessage' => 'chat/send-message',
                 'chat/message/send-message' => 'chat/message/send-message',
+                'chat/getSenderId' => 'chat/get-sender-id?chatId=${chatId}',
+                'POST pusher/auth' => 'site/pusher-auth',
             ],
         ],
 
